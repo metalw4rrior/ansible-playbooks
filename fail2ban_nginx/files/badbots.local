@@ -1,0 +1,8 @@
+# /etc/fail2ban/jail.d/badbots.local
+[badbots]
+enabled  = true
+filter   = nginx-badbots
+action   = iptables[name=badbots, port=http, protocol=tcp]
+logpath  = /var/log/nginx/*access.log
+maxretry = 2
+bantime  = 86400
