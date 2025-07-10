@@ -1,0 +1,50 @@
+---
+- name: bad bots на nginx
+  hosts: nginx_servers
+  become: true
+  tasks:
+
+    - name:  пакет fail2ban
+      apt:
+        name: fail2ban
+        state: present
+        update_cache: yes
+
+    - name: copy sql configs
+      copy:
+        src: files/nginx-sql-injection.conf
+        dest: /etc/fail2ban/filter.d/nginx-sql-injection.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy badbot configs
+      copy:
+        src: files/nginx-badbots.conf
+        dest: /etc/fail2ban/filter.d/nginx-badbots.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy conf for local jail for bad bots
+      copy:
+        src: files/badbots.local
+        dest: /etc/fail2ban/jail.d/badbots.local
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy conf for local jail for sql
+      copy:
+        src: files/sql.local
+        dest: /etc/fail2ban/jail.d/sql.local
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+
+
