@@ -1,0 +1,25 @@
+---
+- name: deploy postgres configuration to server
+  hosts: postgres_server
+  become: true
+  tasks:
+    - name: ensure  directory exists
+      ansible.builtin.file:
+        path: /etc/postgresql
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0755'
+
+    - name: cp postgres configuration folder
+      ansible.builtin.copy:
+        src: conf/postgresql/
+        dest: /etc/postgresql/
+        owner: postgres
+        group: postgres
+        mode: '0644'
+
+    - name: restart postgres
+      ansible.builtin.service:
+        name: postgresql
+        state: restarted
