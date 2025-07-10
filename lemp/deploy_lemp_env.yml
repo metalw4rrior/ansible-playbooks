@@ -1,0 +1,80 @@
+- name:  LEMP stack on ubuntu 22.04
+  hosts: all
+  become: true
+  vars:
+    mysql_root_password: "myrootpassword"
+    app_db_name: "myappdb"
+    app_db_user: "myappuser"
+    app_db_user_password: "myapppassword"
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: true
+        upgrade: dist
+
+    - name: dependencies for adding repositories
+      apt:
+        name:
+          - software-properties-common
+          - ca-certificates
+          - lsb-release
+          - apt-transport-https
+          - curl
+        state: present
+
+    - name: PHP repository (PPA:ondrej/php)
+      command: add-apt-repository -y ppa:ondrej/php
+      args:
+        creates: /etc/apt/sources.list.d/ondrej-ubuntu-php-jammy.list
+
+    - name: update package list
+      apt:
+        update_cache: true
+
+    - name: install packages
+      apt:
+        name:
+          - nginx
+          - apache2
+          - php8.2-fpm
+          - php8.2-mysql
+          - php8.2-cli
+          - php8.2-curl
+          - php8.2-mbstring
+          - php8.2-xml
+          - php8.2-zip
+          - mysql-server
+          - unzip
+          - curl
+        state: present
+
+    - name: enable and start nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: enable and start fpache
+      systemd:
+        name: apache2
+        state: started
+        enabled: true
+
+    - name: enable and start php-fpm
+      systemd:
+        name: php8.2-fpm
+        state: started
+        enabled: true
+
+    - name:  MySQL status
+      systemd:
+        name: mysql
+        state: started
+        enabled: true
+
+
+    - name: composer installation
+      become: true
+      shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      args:
+        creates: /usr/local/bin/composer
