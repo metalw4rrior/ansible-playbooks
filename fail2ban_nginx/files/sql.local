@@ -1,0 +1,9 @@
+
+[nginx-sql-injection]
+enabled  = true
+port     = http,https
+filter   = nginx-sql-injection
+logpath  = /var/log/nginx/access.log
+maxretry = 1
+bantime  = 86400
+findtime = 600
