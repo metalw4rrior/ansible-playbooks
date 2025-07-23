@@ -1,0 +1,61 @@
+---
+- name: sync time and fix zbbbix "agent is out of sync" issue
+  hosts: zabbix_agents
+  become: true
+
+  vars:
+    timezone: "Asia/Yekaterinburg"
+
+  tasks:
+
+    - name: ensure chrony is installed
+      package:
+        name: chrony
+        state: present
+
+    - name: enable and start chrony service
+      systemd:
+        name: chronyd
+        enabled: yes
+        state: started
+
+    - name: set correct timezone
+      command: timedatectl set-timezone {{ timezone }}
+      when: ansible_facts['os_family'] == 'RedHat' or ansible_facts['os_family'] == 'Debian'
+
+
+    - name: restart zabbix-agent
+      systemd:
+        name: zabbix-agent
+        state: restarted
+    - name: show current status
+      command: timedatectl
+      register: timedatectl_output
+
+    - name: print timedatectl output
+      debug:
+        var: timedatectl_output.stdout
+
+    - name: replace NTP server in chrony.conf
+      become: true
+      lineinfile:
+        path: /etc/chrony.conf
+        regexp: '^server .*'
+        state: absent
+
+    - name: add working public NTP servers
+      become: true
+      blockinfile:
+        path: /etc/chrony.conf
+        marker: "# {mark} ANSIBLE MANAGED NTP BLOCK"
+        block: |
+          server time.yandex.ru iburst
+          server pool.ntp.org iburst
+
+
+    - name: restart chronyd
+      become: true
+      systemd:
+        name: chronyd
+        state: restarted
+
